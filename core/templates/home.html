@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+
+<div class="home-container">
+    <!-- Top Section -->
+    <div class="welcome-hero">
+        <canvas id="particleCanvas"></canvas>
+        <div class="welcome-hero-content">
+            <h1>Welcome back, {{ request.user.username }} 👋</h1>
+            <p>Here's a quick overview of your LearnLoop activity today. You're making great progress!</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="stats-row">
+        <div class="stat-box">
+            <div class="stat-info">
+                <span class="stat-label">Matches Found</span>
+                <span class="stat-val">{{ matches_count|default:"0" }}</span>
+            </div>
+            <div class="stat-icon">🎯</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-info">
+                <span class="stat-label">Pending Requests</span>
+                <span class="stat-val">{{ pending_requests_count|default:"0" }}</span>
+            </div>
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">⏳</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-info">
+                <span class="stat-label">Messages</span>
+                <span class="stat-val">{{ messages_count|default:"0" }}</span>
+            </div>
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">💬</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-info">
+                <span class="stat-label">Upcoming Sessions</span>
+                <span class="stat-val">{{ sessions_count|default:"0" }}</span>
+            </div>
+            <div class="stat-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">🗓️</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-row">
+        <a href="/dashboard/" class="btn-action-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            Dashboard
+        </a>
+        <a href="/search/" class="btn-action-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            Find Matches
+        </a>
+        <a href="/chats/" class="btn-action-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Open Chats
+        </a>
+        <a href="/schedules/" class="btn-action-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Schedules
+        </a>
+    </div>
+
+    <!-- Bottom Grid -->
+    <div class="content-grid">
+        
+        <!-- Recent Activity -->
+        <div class="card-section">
+            <div class="card-title">
+                Recent Activity
+            </div>
+            <div class="activity-list">
+                {% for req in recent_requests %}
+                <div class="activity-item">
+                    <div class="act-icon">📥</div>
+                    <div class="act-content">
+                        <p><strong>{{ req.sender.username }}</strong> sent you a swap request.</p>
+                        <span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            Pending Review
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                {% endfor %}
+                
+                {% for msg in recent_messages %}
+                <div class="activity-item">
+                    <div class="act-icon">💬</div>
+                    <div class="act-content">
+                        <p>New message from <strong>{{ msg.sender.username }}</strong></p>
+                        <span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            {{ msg.timestamp|timesince }} ago
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                {% endfor %}
+                
+                {% if not recent_requests and not recent_messages %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🛌</div>
+                    <p>No recent activity to show.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Suggested Matches -->
+        <div class="card-section">
+            <div class="card-title">
+                Top Suggested Matches
+                <a href="/dashboard/">View All</a>
+            </div>
+            <div class="match-list">
+                {% for m, score in top_matches %}
+                <div class="match-item">
+                    <div class="match-item-info">
+                        <div class="match-item-avatar">{{ m.user.username|make_list|first|upper }}</div>
+                        <div class="match-item-text">
+                            <h4>{{ m.user.username }}</h4>
+                            <div class="score-badge">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                Score: {{ score }}
+                            </div>
+                        </div>
+                    </div>
+                    <form action="/send-request/{{ m.user.id }}/" method="POST" style="margin:0;">
+                        {% csrf_token %}
+                        <button class="btn-small" type="submit">Request</button>
+                    </form>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <p>No matches available right now.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% else %}
+
+<div class="hero">
+    <canvas id="particleCanvas"></canvas>
+    <div class="hero-content">
+        <h1>Exchange Skills. <br/>Learn Without Paying.</h1>
+        <p>Join a global community where knowledge is the only currency. Share what you know, and learn exactly what you need.</p>
+        <div class="hero-buttons">
+            <a href="/register/" class="btn-primary">Get Started for Free</a>
+            <a href="/search/" class="btn-secondary">Browse Skills</a>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-subtitle">Start exchanging knowledge in three simple steps. It's built to be seamless and frictionless.</p>
+    
+    <div class="steps-grid">
+        <div class="step-card">
+            <div class="step-number">01</div>
+            <div class="step-icon">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <h3>Create Profile</h3>
+            <p>List the unique skills you excel at and outline exactly what you're hoping to learn from others.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">02</div>
+            <div class="step-icon">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <h3>Find Matches</h3>
+            <p>Our algorithm instantly connects you with members whose needs perfectly align with your offerings.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">03</div>
+            <div class="step-icon">
+                <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </div>
+            <h3>Start Learning</h3>
+            <p>Connect through our integrated chat, set up a meeting, and start exchanging valuable knowledge.</p>
+        </div>
+    </div>
+</div>
+
+<div class="section" style="background: var(--card-bg); border-radius: 24px; padding: 80px 40px; box-shadow: var(--shadow-md);">
+    <h2 class="section-title">Popular Skills Being Traded</h2>
+    <p class="section-subtitle">Discover what our community is actively teaching and learning right now.</p>
+    
+    <div class="skills-cloud">
+        <div class="skill-pill">🚀 Full-Stack Web Development</div>
+        <div class="skill-pill">🎨 UI/UX & Graphic Design</div>
+        <div class="skill-pill">📸 Digital Photography</div>
+        <div class="skill-pill">🐍 Python & Data Science</div>
+        <div class="skill-pill">🎬 Video Editing</div>
+        <div class="skill-pill">📈 Digital Marketing</div>
+        <div class="skill-pill">🎸 Guitar Lessons</div>
+        <div class="skill-pill">🗣️ Conversational Spanish</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2 class="section-title">Why Choose LearnLoop?</h2>
+    <p class="section-subtitle">We believe education should be accessible to everyone, regardless of financial barriers.</p>
+    
+    <div class="features-grid">
+        <div class="feature-item">
+            <div class="feature-icon"><svg stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            <div class="feature-content">
+                <h3>100% Free</h3>
+                <p>Never pay for courses again. Your knowledge is your currency.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><svg stroke="#3b82f6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg></div>
+            <div class="feature-content">
+                <h3>Real Networking</h3>
+                <p>Build meaningful relationships with motivated professionals globally.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><svg stroke="#f59e0b" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+            <div class="feature-content">
+                <h3>Rapid Growth</h3>
+                <p>Learn practical, real-world skills faster through 1-on-1 sessions.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon"><svg stroke="#8b5cf6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            <div class="feature-content">
+                <h3>Give Back</h3>
+                <p>Experience the fulfillment of helping others achieve their goals.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section" style="margin-bottom: 40px;">
+    <div class="cta-banner">
+        <h2>Ready to transform the way you learn?</h2>
+        <p>Join thousands of members already trading skills and accelerating their careers on LearnLoop.</p>
+        <a href="/register/" class="cta-button">Create Your Free Profile</a>
+    </div>
+</div>
+
+{% endif %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/home.js' %}"></script>
+{% endblock %}
+{% endblock %}

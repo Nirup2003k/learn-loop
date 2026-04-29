@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/requests.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+    <div class="page-header">
+        <h2>Swap Requests</h2>
+        <p>Manage your incoming and outgoing skill exchange requests.</p>
+    </div>
+
+    <!-- Received Requests -->
+    <div class="section-title">Received Requests</div>
+    <div class="requests-grid">
+        {% for r in received %}
+        <div class="req-card">
+            <div class="req-header">
+                <div class="req-user">
+                    <div class="req-avatar">{{ r.sender.username|make_list|first|upper }}</div>
+                    <div class="req-name">{{ r.sender.username }}</div>
+                </div>
+                <div class="badge {{ r.status }}">
+                    {% if r.status == 'pending' %}⏳
+                    {% elif r.status == 'accepted' %}✅
+                    {% elif r.status == 'rejected' %}❌
+                    {% endif %}
+                    {{ r.status }}
+                </div>
+            </div>
+
+            <div class="req-details">
+                <p><strong>Offers:</strong> {{ r.skill_offered }}</p>
+                <p><strong>Wants:</strong> {{ r.skill_wanted }}</p>
+            </div>
+
+            <div class="req-actions">
+                {% if r.status == 'pending' %}
+                    <form action="/accept/{{ r.id }}/" method="POST">
+                        {% csrf_token %}
+                        <button class="btn-action btn-accept">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Accept
+                        </button>
+                    </form>
+                    <form action="/reject/{{ r.id }}/" method="POST">
+                        {% csrf_token %}
+                        <button class="btn-action btn-reject">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            Reject
+                        </button>
+                    </form>
+                {% elif r.status == 'accepted' %}
+                    <a href="{% url 'chat' r.sender.id %}" class="btn-action btn-chat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Chat
+                    </a>
+                    <a href="{% url 'create_schedule' r.sender.id %}" class="btn-action btn-schedule">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Schedule
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📥</div>
+            <p>No received requests at the moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Sent Requests -->
+    <div class="section-title">Sent Requests</div>
+    <div class="requests-grid">
+        {% for r in sent %}
+        <div class="req-card">
+            <div class="req-header">
+                <div class="req-user">
+                    <div class="req-avatar">{{ r.receiver.username|make_list|first|upper }}</div>
+                    <div class="req-name">To: {{ r.receiver.username }}</div>
+                </div>
+                <div class="badge {{ r.status }}">
+                    {% if r.status == 'pending' %}⏳
+                    {% elif r.status == 'accepted' %}✅
+                    {% elif r.status == 'rejected' %}❌
+                    {% endif %}
+                    {{ r.status }}
+                </div>
+            </div>
+
+            <div class="req-details">
+                <p><strong>You offered:</strong> {{ r.skill_offered }}</p>
+                <p><strong>You want:</strong> {{ r.skill_wanted }}</p>
+            </div>
+
+            <div class="req-actions">
+                {% if r.status == 'accepted' %}
+                    <a href="{% url 'chat' r.receiver.id %}" class="btn-action btn-chat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Chat
+                    </a>
+                    <a href="{% url 'create_schedule' r.receiver.id %}" class="btn-action btn-schedule">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Schedule
+                    </a>
+                {% elif r.status == 'pending' %}
+                    <button class="btn-action" style="background: var(--bg-color); color: var(--text-muted); border: 1px dashed var(--border-color); cursor: not-allowed;" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Waiting for response
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📤</div>
+            <p>You haven't sent any requests yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

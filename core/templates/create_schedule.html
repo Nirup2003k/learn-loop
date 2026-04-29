@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/create_schedule.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="schedule-container">
+    <div class="schedule-header">
+        <h2>🗓️ Schedule Session</h2>
+        <p>Set up a meeting with <strong>{{ receiver.username }}</strong></p>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="time">Time</label>
+            <input type="time" id="time" name="time" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+            <label for="meeting_link">Meeting Link (Optional)</label>
+            <input type="url" id="meeting_link" name="meeting_link" class="form-control" placeholder="e.g. https://meet.google.com/...">
+        </div>
+
+        <button type="submit" class="btn-submit">Send Schedule Request</button>
+    </form>
+
+    <a href="{% url 'requests' %}" class="back-link">← Back to Requests</a>
+</div>
+
+{% endblock %}

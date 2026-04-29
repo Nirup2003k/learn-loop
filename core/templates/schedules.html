@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/schedules.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>My Schedules</h2>
+    <p>Manage your upcoming learning sessions.</p>
+</div>
+
+<!-- Received Schedules -->
+<div class="section-title">📥 Received Schedules</div>
+<div class="requests-grid">
+    {% for s in received %}
+    <div class="req-card">
+        <div class="req-header">
+            <div class="req-user">From: {{ s.sender.username }}</div>
+            <div class="badge {{ s.status }}">{{ s.status }}</div>
+        </div>
+
+        <div class="req-details">
+            <p><strong>📅 Date:</strong> {{ s.date }}</p>
+            <p><strong>⏰ Time:</strong> {{ s.time }}</p>
+            {% if s.meeting_link %}
+                <p><strong>🔗 Link:</strong> <a href="{{ s.meeting_link }}" target="_blank" style="color: var(--primary);">View Link</a></p>
+            {% endif %}
+        </div>
+
+        <div class="req-actions">
+            {% if s.status == 'pending' %}
+                <form action="{% url 'accept_schedule' s.id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="btn-action btn-accept">Accept</button>
+                </form>
+                <form action="{% url 'reject_schedule' s.id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="btn-action btn-reject">Reject</button>
+                </form>
+            {% elif s.status == 'accepted' and s.meeting_link %}
+                <a href="{{ s.meeting_link }}" target="_blank" class="btn-action btn-join">🎥 Join Meeting</a>
+            {% elif s.status == 'accepted' %}
+                <a href="{% url 'chat' s.sender.id %}" class="btn-action btn-join" style="background: var(--text-main);">💬 Message to coordinate</a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <p>No received schedule requests.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Sent Schedules -->
+<div class="section-title">📤 Sent Schedules</div>
+<div class="requests-grid">
+    {% for s in sent %}
+    <div class="req-card">
+        <div class="req-header">
+            <div class="req-user">To: {{ s.receiver.username }}</div>
+            <div class="badge {{ s.status }}">{{ s.status }}</div>
+        </div>
+
+        <div class="req-details">
+            <p><strong>📅 Date:</strong> {{ s.date }}</p>
+            <p><strong>⏰ Time:</strong> {{ s.time }}</p>
+            {% if s.meeting_link %}
+                <p><strong>🔗 Link:</strong> <a href="{{ s.meeting_link }}" target="_blank" style="color: var(--primary);">View Link</a></p>
+            {% endif %}
+        </div>
+
+        <div class="req-actions">
+            {% if s.status == 'accepted' and s.meeting_link %}
+                <a href="{{ s.meeting_link }}" target="_blank" class="btn-action btn-join">🎥 Join Meeting</a>
+            {% elif s.status == 'accepted' %}
+                <a href="{% url 'chat' s.receiver.id %}" class="btn-action btn-join" style="background: var(--text-main);">💬 Message to coordinate</a>
+            {% elif s.status == 'pending' %}
+                <button class="btn-action" style="background: #f1f5f9; color: #64748b; cursor: not-allowed;" disabled>Waiting for response</button>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <p>You haven't scheduled any sessions.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

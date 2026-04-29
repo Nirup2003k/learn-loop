@@ -1,0 +1,160 @@
+.page-header {
+        margin-bottom: 40px;
+    }
+
+    .page-header h2 {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 16px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .requests-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 24px;
+        margin-bottom: 60px;
+    }
+
+    .req-card {
+        background: white;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .req-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .req-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .req-user {
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--text-main);
+    }
+
+    /* Badges */
+    .badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge.pending {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fde68a;
+    }
+
+    .badge.accepted {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+
+    .badge.rejected {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .req-details {
+        flex: 1;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .req-details p {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+
+    .req-details p:last-child {
+        margin-bottom: 0;
+    }
+
+    .req-details strong {
+        color: var(--text-main);
+    }
+
+    .req-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .req-actions form {
+        flex: 1;
+    }
+
+    .btn-action {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        text-decoration: none;
+        display: block;
+    }
+
+    .btn-accept {
+        background: #10b981;
+        color: white;
+    }
+    .btn-accept:hover { background: #059669; }
+
+    .btn-reject {
+        background: #f3f4f6;
+        color: #ef4444;
+    }
+    .btn-reject:hover { background: #e5e7eb; }
+
+    .btn-join {
+        background: var(--primary);
+        color: white;
+    }
+    .btn-join:hover { background: var(--primary-hover); }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        background: white;
+        border: 1px dashed var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 40px;
+        text-align: center;
+        color: var(--text-muted);
+    }

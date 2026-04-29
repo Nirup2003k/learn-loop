@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/chat_list.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+    <div class="page-header">
+        <h2>Your Conversations</h2>
+        <p>Chat with your accepted swap matches to schedule learning sessions.</p>
+    </div>
+
+    <div class="chat-list-container">
+        <div class="chat-list-content">
+            {% for chat_user in users %}
+                <a href="{% url 'chat' chat_user.id %}" class="chat-item">
+                    <div class="chat-avatar">
+                        {{ chat_user.username|make_list|first|upper }}
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-name">{{ chat_user.username }}</div>
+                        <div class="chat-preview">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            Tap to view messages...
+                        </div>
+                    </div>
+                    <div class="chat-arrow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">💬</div>
+                    <p>No conversations yet. Send a request to start chatting!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

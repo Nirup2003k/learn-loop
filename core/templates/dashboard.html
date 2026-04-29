@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/dashboard.css' %}">
+{% endblock %}
+
+<div class="dashboard-container">
+    
+    <div class="dashboard-header">
+        <h1>Your Dashboard</h1>
+        <p>Manage your matches, requests, and connections all in one place.</p>
+    </div>
+
+    <!-- 1. Top Stats Bar -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">Total Matches</span>
+                <span class="stat-value">{{ total_matches|default:"0" }}</span>
+            </div>
+            <div class="stat-icon">🎯</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">Pending Requests</span>
+                <span class="stat-value">{{ received|length|default:"0" }}</span>
+            </div>
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">⏳</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">Messages</span>
+                <span class="stat-value">{{ total_messages|default:"0" }}</span>
+            </div>
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">💬</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">Upcoming Sessions</span>
+                <span class="stat-value">{{ total_sessions|default:"0" }}</span>
+            </div>
+            <div class="stat-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">🗓️</div>
+        </div>
+    </div>
+
+    <!-- 2. Urgent Actions: Pending Requests -->
+    <div class="section-wrapper">
+        <h3 class="section-title">Pending Requests</h3>
+        <div class="requests-list">
+            {% for r in received %}
+            <div class="request-card">
+                <div class="req-info">
+                    <div class="req-avatar">{{ r.sender.username|make_list|first|upper }}</div>
+                    <div class="req-text">
+                        <h4>{{ r.sender.username }}</h4>
+                        <p>Offers: <strong>{{ r.skill_offered }}</strong> &bull; Wants: <strong>{{ r.skill_wanted }}</strong></p>
+                    </div>
+                </div>
+                <div class="req-actions">
+                    <form action="/accept-request/{{ r.id }}/" method="POST" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action btn-accept">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Accept
+                        </button>
+                    </form>
+                    <form action="/reject-request/{{ r.id }}/" method="POST" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action btn-reject">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            Reject
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📥</div>
+                <p>No pending requests. You're all caught up!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 3. Secondary: Top Matches -->
+    <div class="section-wrapper">
+        <h3 class="section-title">Top Matches</h3>
+        <div class="matches-grid">
+            {% for m, score in matches %}
+            <div class="match-card">
+                <div class="match-header">
+                    <div class="match-user">
+                        <div class="match-avatar">{{ m.user.username|make_list|first|upper }}</div>
+                        <div class="match-info">
+                            <h4>{{ m.user.username }}</h4>
+                            <div class="score-badge">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                Score: {{ score }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="match-skills">
+                    <div>Teaches: <strong>{{ m.teach_skills|truncatechars:25 }}</strong></div>
+                    <div style="margin-top: 4px;">Wants: <strong>{{ m.learn_skills|truncatechars:25 }}</strong></div>
+                </div>
+
+                {% if m.user.id in sent_ids %}
+                    <button class="btn-outline" disabled style="cursor: not-allowed; opacity: 0.6;">Request Sent</button>
+                {% else %}
+                    <form action="/send-request/{{ m.user.id }}/" method="POST" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-outline">Send Swap Request</button>
+                    </form>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">🔍</div>
+                <p>No perfect matches found right now. Try updating your skills!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

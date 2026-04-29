@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/chat.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+    <div class="chat-container">
+        <div class="chat-header">
+            <a href="{% url 'chat_list' %}" class="back-btn" title="Back to Chats">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </a>
+            <div class="chat-header-avatar">
+                {{ other_user.username|make_list|first|upper }}
+            </div>
+            <div class="chat-header-info">
+                <div class="chat-header-name">{{ other_user.username }}</div>
+                <div class="chat-status"><span class="status-dot"></span> Online</div>
+            </div>
+        </div>
+
+    <div class="chat-box" id="chatBox">
+        {% for msg in messages %}
+            {% if msg.sender == request.user %}
+                <div class="msg-row sent" data-id="{{ msg.id }}">
+                    <div class="msg-bubble">
+                        <div>{{ msg.content }}</div>
+                        <div class="msg-time">{{ msg.timestamp|date:"H:i" }}</div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="msg-row received" data-id="{{ msg.id }}">
+                    <div class="msg-bubble">
+                        <div>{{ msg.content }}</div>
+                        <div class="msg-time">{{ msg.timestamp|date:"H:i" }}</div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="chat-input-area">
+        <form method="POST" class="chat-form" id="chatForm">
+            {% csrf_token %}
+            <input type="text" name="message" id="messageInput" class="chat-input" placeholder="Type a message..." autocomplete="off">
+            <button type="submit" class="send-btn">
+                <svg viewBox="0 0 24 24">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+</div>
+
+<!-- Store variables for AJAX from a hidden element to avoid IDE JS syntax errors -->
+<div id="chatData" 
+     data-last-msg-id="{% if messages %}{{ messages.last.id }}{% else %}0{% endif %}" 
+     data-current-user-id="{{ request.user.id }}" 
+     data-other-user-id="{{ other_user.id }}" 
+     style="display:none;"></div>
+
+{% block extra_js %}
+<script src="{% static 'core/js/chat.js' %}"></script>
+{% endblock %}
+{% endblock %}

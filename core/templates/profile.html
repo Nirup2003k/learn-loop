@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="profile-layout">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h3>Menu</h3>
+        <nav class="sidebar-nav">
+            <a href="/dashboard/" class="sidebar-link">
+                <span>🏠</span> Dashboard
+            </a>
+            <a href="/requests/" class="sidebar-link">
+                <span>📩</span> Requests
+            </a>
+            <a href="/schedules/" class="sidebar-link">
+                <span>📅</span> Schedules
+            </a>
+            <a href="/profile/" class="sidebar-link active">
+                <span>👤</span> My Profile
+            </a>
+        </nav>
+
+        <h3>Account</h3>
+        <nav class="sidebar-nav" style="margin-bottom: 0;">
+            <a href="/logout/" class="sidebar-link danger">
+                <span>🚪</span> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="profile-main">
+
+        <!-- Header -->
+        <div class="profile-header">
+            <div class="profile-banner"></div>
+            <div class="profile-info">
+                {% if profile.image %}
+                    <img src="{{ profile.image.url }}" class="profile-avatar" alt="Avatar">
+                {% else %}
+                    <div class="profile-avatar-placeholder">{{ request.user.username|make_list|first|upper }}</div>
+                {% endif %}
+                <div class="profile-name">
+                    <h2>{{ request.user.username }}</h2>
+                    <p>LearnLoop Member</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Settings -->
+        <div class="settings-card">
+            <h3>Profile Settings</h3>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>Skills You Can Teach</label>
+                    <input type="text" name="teach" class="form-control" value="{{ profile.teach_skills }}" placeholder="e.g. Python, Graphic Design">
+                </div>
+
+                <div class="form-group">
+                    <label>Skills You Want to Learn</label>
+                    <input type="text" name="learn" class="form-control" value="{{ profile.learn_skills }}" placeholder="e.g. React, Spanish">
+                </div>
+
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea name="bio" class="form-control" rows="3" placeholder="Tell us a little about yourself">{{ profile.bio|default:'' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Skill Level</label>
+                    <select name="skill_level" class="form-control">
+                        <option value="beginner" {% if profile.skill_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                        <option value="intermediate" {% if profile.skill_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                        <option value="expert" {% if profile.skill_level == 'expert' %}selected{% endif %}>Expert</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Learning Mode</label>
+                    <select name="learning_mode" class="form-control">
+                        <option value="chat" {% if profile.learning_mode == 'chat' %}selected{% endif %}>Chat</option>
+                        <option value="video" {% if profile.learning_mode == 'video' %}selected{% endif %}>Video</option>
+                        <option value="both" {% if profile.learning_mode == 'both' %}selected{% endif %}>Both</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Availability</label>
+                    <input type="text" name="availability" class="form-control" value="{{ profile.availability|default:'' }}" placeholder="e.g., weekends, evenings, flexible">
+                </div>
+
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" class="form-control" value="{{ profile.location|default:'' }}" placeholder="City, Country">
+                </div>
+
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <input type="file" name="image" class="file-input">
+                </div>
+
+                <button type="submit" class="btn-primary" style="padding: 12px 30px;">Save Changes</button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

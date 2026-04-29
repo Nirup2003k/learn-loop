@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Log in to continue your learning journey.</p>
+
+        {% if error %}
+            <div class="auth-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="auth-input-group">
+                <label>Username</label>
+                <input type="text" name="username" class="auth-input" placeholder="Enter your username" required>
+            </div>
+            <div class="auth-input-group">
+                <label>Password</label>
+                <input type="password" name="password" class="auth-input" placeholder="Enter your password" required>
+            </div>
+            
+            <button type="submit" class="auth-btn">Log In</button>
+        </form>
+
+        <div class="auth-link">
+            <a href="{% url 'password_reset' %}">Forgot Password?</a>
+        </div>
+        <div class="auth-link">
+            Don't have an account? <a href="/register/">Sign up for free</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
