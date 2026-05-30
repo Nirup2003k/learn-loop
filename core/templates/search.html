@@ -6,58 +6,86 @@
 
 {% block content %}
 
-<div class="page-header">
-    <h2>Search Results</h2>
-    <p>Found {{ results|length }} matching members for <span class="search-query">"{{ query }}"</span></p>
-</div>
-
-<div class="search-grid">
-    {% for user in results %}
-    <div class="user-card">
-        <div class="user-card-header">
-            <div class="user-avatar">{{ user.user.username|make_list|first|upper }}</div>
+<div class="search-page">
+    <header class="search-header">
+        <div>
+            <p class="eyebrow">Member Discovery</p>
+            <h1>Search Results</h1>
+            {% if query %}
+                <p>Found {{ results|length }} matching members for <strong>"{{ query }}"</strong>.</p>
+            {% else %}
+                <p>Search for a skill to find members who can teach or want to learn it.</p>
+            {% endif %}
         </div>
-        <div class="user-card-body">
-            <div class="user-name">{{ user.user.username }}</div>
-            <div class="user-role">Community Member</div>
+    </header>
 
-            <div class="skill-section">
-                <div class="skill-label">Can Teach</div>
-                <div class="skill-pills">
-                    <span class="skill-pill">{{ user.teach_skills|default:"Not specified" }}</span>
+    <form action="/search/" method="GET" class="refine-search">
+        <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search skills, e.g. Python, Design, Spanish" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <section class="results-grid">
+        {% for user in results %}
+        <article class="member-card">
+            <div class="member-top">
+                <div class="member-avatar">{{ user.user.username|make_list|first|upper }}</div>
+                <div>
+                    <h2>{{ user.user.username }}</h2>
+                    <p>{{ user.skill_level|title }} member</p>
                 </div>
             </div>
 
-            <div class="skill-section">
-                <div class="skill-label">Wants to Learn</div>
-                <div class="skill-pills">
-                    <span class="skill-pill wants">{{ user.learn_skills|default:"Not specified" }}</span>
+            <div class="member-meta">
+                <div>
+                    <span>Sessions</span>
+                    <strong>{{ user.sessions_completed }}</strong>
+                </div>
+                <div>
+                    <span>Rating</span>
+                    <strong>{{ user.average_rating }}</strong>
                 </div>
             </div>
 
-            <div class="user-card-footer">
+            <div class="skills-block">
+                <div>
+                    <span>Can Teach</span>
+                    <p>{{ user.teach_skills|default:"Not specified" }}</p>
+                </div>
+                <div>
+                    <span>Wants to Learn</span>
+                    <p>{{ user.learn_skills|default:"Not specified" }}</p>
+                </div>
+            </div>
+
+            <div class="preference-row">
+                <span>{{ user.learning_mode|title }} mode</span>
+                <span>{{ user.location|default:"Location not set" }}</span>
+            </div>
+
+            <div class="member-actions">
                 {% if request.user.is_authenticated and request.user.id != user.user.id %}
-                    {% if user.user.id in accepted_user_ids %}
-                        <button class="btn-primary btn-block" disabled style="background: #94a3b8; cursor: not-allowed; opacity: 0.7; box-shadow: none;">Connected</button>
+                    {% if user.user.id in swap_related_user_ids %}
+                        <button class="btn-action btn-disabled" disabled>Already Connected</button>
                     {% else %}
                         <form action="/send-request/{{ user.user.id }}/" method="POST">
                             {% csrf_token %}
-                            <button class="btn-primary btn-block">Send Swap Request</button>
+                            <button class="btn-action btn-primary-action">Send Swap Request</button>
                         </form>
                     {% endif %}
                 {% elif not request.user.is_authenticated %}
-                <a href="/login/" class="btn-primary btn-block" style="text-decoration: none; background: #e2e8f0; color: #475569;">Login to Connect</a>
+                    <a href="/login/" class="btn-action btn-secondary-action">Login to Connect</a>
+                {% else %}
+                    <a href="/profile/" class="btn-action btn-secondary-action">Edit Your Profile</a>
                 {% endif %}
             </div>
+        </article>
+        {% empty %}
+        <div class="empty-state">
+            <h2>No matches found</h2>
+            <p>Try a broader skill term like Python, Design, Marketing, Excel, or Spanish.</p>
         </div>
-    </div>
-    {% empty %}
-    <div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <h3>No matches found</h3>
-        <p>We couldn't find anyone matching "{{ query }}". Try searching for something else like 'Python', 'Design', or 'Spanish'.</p>
-    </div>
-    {% endfor %}
+        {% endfor %}
+    </section>
 </div>
 
 {% endblock %}

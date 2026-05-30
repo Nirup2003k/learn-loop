@@ -6,113 +6,164 @@
 
 {% block content %}
 
-<div class="profile-layout">
-    
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <h3>Menu</h3>
-        <nav class="sidebar-nav">
-            <a href="/dashboard/" class="sidebar-link">
-                <span>🏠</span> Dashboard
-            </a>
-            <a href="/requests/" class="sidebar-link">
-                <span>📩</span> Requests
-            </a>
-            <a href="/schedules/" class="sidebar-link">
-                <span>📅</span> Schedules
-            </a>
-            <a href="/profile/" class="sidebar-link active">
-                <span>👤</span> My Profile
-            </a>
-        </nav>
+<div class="profile-page">
+    <header class="profile-page-header">
+        <div>
+            <p class="eyebrow">Account Profile</p>
+            <h1>Manage your learning profile</h1>
+            <p>Keep your skills, preferences, and availability accurate so matches can find you faster.</p>
+        </div>
+        <div class="profile-actions">
+            <a href="/dashboard/" class="secondary-link">Dashboard</a>
+            <a href="/requests/" class="secondary-link">Requests</a>
+        </div>
+    </header>
 
-        <h3>Account</h3>
-        <nav class="sidebar-nav" style="margin-bottom: 0;">
-            <a href="/logout/" class="sidebar-link danger">
-                <span>🚪</span> Logout
-            </a>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="profile-main">
-
-        <!-- Header -->
-        <div class="profile-header">
-            <div class="profile-banner"></div>
-            <div class="profile-info">
+    <div class="profile-grid">
+        <aside class="profile-summary">
+            <div class="summary-cover"></div>
+            <div class="summary-content">
                 {% if profile.image %}
-                    <img src="{{ profile.image.url }}" class="profile-avatar" alt="Avatar">
+                    <img src="{{ profile.image.url }}" class="profile-avatar" alt="Profile picture">
                 {% else %}
                     <div class="profile-avatar-placeholder">{{ request.user.username|make_list|first|upper }}</div>
                 {% endif %}
-                <div class="profile-name">
-                    <h2>{{ request.user.username }}</h2>
-                    <p>LearnLoop Member</p>
+
+                <h2>{{ request.user.username }}</h2>
+                <p class="member-label">LearnLoop Member</p>
+
+                <div class="profile-metrics">
+                    <div>
+                        <span>{{ profile.sessions_completed }}</span>
+                        <p>Sessions</p>
+                    </div>
+                    <div>
+                        <span>{{ profile.average_rating }}</span>
+                        <p>Rating</p>
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <h3>Teaches</h3>
+                    <p>{{ profile.teach_skills|default:"Not specified" }}</p>
+                </div>
+
+                <div class="summary-section">
+                    <h3>Learning</h3>
+                    <p>{{ profile.learn_skills|default:"Not specified" }}</p>
+                </div>
+
+                <div class="summary-section compact">
+                    <h3>Preferences</h3>
+                    <p>{{ profile.skill_level|title }} level</p>
+                    <p>{{ profile.learning_mode|title }} sessions</p>
+                    <p>{{ profile.location|default:"Location not set" }}</p>
                 </div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Update Settings -->
-        <div class="settings-card">
-            <h3>Profile Settings</h3>
+        <section class="profile-editor">
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                
-                <div class="form-group">
-                    <label>Skills You Can Teach</label>
-                    <input type="text" name="teach" class="form-control" value="{{ profile.teach_skills }}" placeholder="e.g. Python, Graphic Design">
+
+                <div class="form-section">
+                    <div class="section-heading">
+                        <h2>Skills</h2>
+                        <p>Use comma-separated skills to improve search and match quality.</p>
+                    </div>
+
+                    <div class="field-grid two-columns">
+                        <div class="form-group">
+                            <label for="teach">Skills You Can Teach</label>
+                            <input id="teach" type="text" name="teach" class="form-control" value="{{ profile.teach_skills }}" placeholder="Python, Graphic Design, Excel">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="learn">Skills You Want to Learn</label>
+                            <input id="learn" type="text" name="learn" class="form-control" value="{{ profile.learn_skills }}" placeholder="React, Spanish, Public Speaking">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Skills You Want to Learn</label>
-                    <input type="text" name="learn" class="form-control" value="{{ profile.learn_skills }}" placeholder="e.g. React, Spanish">
+                <div class="form-section">
+                    <div class="section-heading">
+                        <h2>About You</h2>
+                        <p>This helps other members understand your background before connecting.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bio">Bio</label>
+                        <textarea id="bio" name="bio" class="form-control" rows="5" placeholder="Share your experience, goals, and what kind of exchange works best for you.">{{ profile.bio|default:'' }}</textarea>
+                    </div>
+
+                    <div class="field-grid two-columns">
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input id="location" type="text" name="location" class="form-control" value="{{ profile.location|default:'' }}" placeholder="City, Country">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone" name="timezone" class="form-control">
+                                {% for tz in timezones %}
+                                <option value="{{ tz }}" {% if profile.timezone == tz %}selected{% endif %}>{{ tz }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="availability">Availability</label>
+                            <input id="availability" type="text" name="availability" class="form-control" value="{{ profile.availability|default:'' }}" placeholder="Weekends, evenings, flexible">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Bio</label>
-                    <textarea name="bio" class="form-control" rows="3" placeholder="Tell us a little about yourself">{{ profile.bio|default:'' }}</textarea>
+                <div class="form-section">
+                    <div class="section-heading">
+                        <h2>Learning Preferences</h2>
+                        <p>Set expectations for how you prefer to learn and teach.</p>
+                    </div>
+
+                    <div class="field-grid two-columns">
+                        <div class="form-group">
+                            <label for="skill_level">Skill Level</label>
+                            <select id="skill_level" name="skill_level" class="form-control">
+                                <option value="beginner" {% if profile.skill_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                                <option value="intermediate" {% if profile.skill_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                <option value="expert" {% if profile.skill_level == 'expert' %}selected{% endif %}>Expert</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="learning_mode">Learning Mode</label>
+                            <select id="learning_mode" name="learning_mode" class="form-control">
+                                <option value="chat" {% if profile.learning_mode == 'chat' %}selected{% endif %}>Chat</option>
+                                <option value="video" {% if profile.learning_mode == 'video' %}selected{% endif %}>Video</option>
+                                <option value="both" {% if profile.learning_mode == 'both' %}selected{% endif %}>Both</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Skill Level</label>
-                    <select name="skill_level" class="form-control">
-                        <option value="beginner" {% if profile.skill_level == 'beginner' %}selected{% endif %}>Beginner</option>
-                        <option value="intermediate" {% if profile.skill_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
-                        <option value="expert" {% if profile.skill_level == 'expert' %}selected{% endif %}>Expert</option>
-                    </select>
+                <div class="form-section">
+                    <div class="section-heading">
+                        <h2>Profile Picture</h2>
+                        <p>Upload a clear image so other members can recognize your profile.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image">Image Upload</label>
+                        <input id="image" type="file" name="image" class="file-input">
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Learning Mode</label>
-                    <select name="learning_mode" class="form-control">
-                        <option value="chat" {% if profile.learning_mode == 'chat' %}selected{% endif %}>Chat</option>
-                        <option value="video" {% if profile.learning_mode == 'video' %}selected{% endif %}>Video</option>
-                        <option value="both" {% if profile.learning_mode == 'both' %}selected{% endif %}>Both</option>
-                    </select>
+                <div class="form-footer">
+                    <a href="/logout/" class="logout-link">Logout</a>
+                    <button type="submit" class="btn-primary">Save Profile</button>
                 </div>
-
-                <div class="form-group">
-                    <label>Availability</label>
-                    <input type="text" name="availability" class="form-control" value="{{ profile.availability|default:'' }}" placeholder="e.g., weekends, evenings, flexible">
-                </div>
-
-                <div class="form-group">
-                    <label>Location</label>
-                    <input type="text" name="location" class="form-control" value="{{ profile.location|default:'' }}" placeholder="City, Country">
-                </div>
-
-                <div class="form-group">
-                    <label>Profile Picture</label>
-                    <input type="file" name="image" class="file-input">
-                </div>
-
-                <button type="submit" class="btn-primary" style="padding: 12px 30px;">Save Changes</button>
             </form>
-        </div>
-
+        </section>
     </div>
-
 </div>
 
 {% endblock %}

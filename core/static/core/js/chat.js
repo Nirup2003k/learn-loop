@@ -1,81 +1,119 @@
 const chatBox = document.getElementById('chatBox');
-    if (chatBox) {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+if (chatBox) {
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-    const input = document.getElementById('messageInput');
-    const form = document.getElementById('chatForm');
+const input = document.getElementById('messageInput');
+const form = document.getElementById('chatForm');
+
+const chatDataEl = document.getElementById('chatData');
+if (!chatDataEl) {
+    console.warn('Chat data element not found.');
+} else {
+    var lastMessageId = parseInt(chatDataEl.getAttribute('data-last-msg-id')) || 0;
+    var currentUserId = parseInt(chatDataEl.getAttribute('data-current-user-id'));
+    var otherUserId = parseInt(chatDataEl.getAttribute('data-other-user-id'));
+}
+
+function appendMessage(msgData, isSent) {
+    // Prevent duplicate messages
+    if (msgData.id <= lastMessageId && lastMessageId !== 0) return;
     
-    const chatDataEl = document.getElementById('chatData');
-    let lastMessageId = parseInt(chatDataEl.getAttribute('data-last-msg-id')) || 0;
-    const currentUserId = parseInt(chatDataEl.getAttribute('data-current-user-id'));
-    const otherUserId = parseInt(chatDataEl.getAttribute('data-other-user-id'));
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'msg-row ' + (isSent ? 'sent' : 'received');
+    rowDiv.setAttribute('data-id', msgData.id);
 
-    function appendMessage(msgData, isSent) {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'msg-row ' + (isSent ? 'sent' : 'received');
-        rowDiv.setAttribute('data-id', msgData.id);
+    const bubbleDiv = document.createElement('div');
+    bubbleDiv.className = 'msg-bubble';
 
-        rowDiv.innerHTML = `
-            <div class="msg-bubble">
-                <div>${msgData.content}</div>
-                <div class="msg-time">${msgData.timestamp}</div>
-            </div>
-        `;
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'msg-content';
+    contentDiv.textContent = msgData.content;
 
-        chatBox.appendChild(rowDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        lastMessageId = Math.max(lastMessageId, msgData.id);
-    }
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'msg-time';
+    timeDiv.textContent = msgData.timestamp;
 
-    // Handle AJAX form submission
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const content = input.value.trim();
-        if (content === '') return;
+    bubbleDiv.appendChild(contentDiv);
+    bubbleDiv.appendChild(timeDiv);
+    rowDiv.appendChild(bubbleDiv);
 
-        input.value = ''; // clear immediately
+    chatBox.appendChild(rowDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    lastMessageId = Math.max(lastMessageId, msgData.id);
+    
+    // Hide empty state if present
+    const emptyState = document.querySelector('.chat-empty');
+    if (emptyState) emptyState.style.display = 'none';
+}
 
-        fetch(`/chats/${otherUserId}/send/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({ message: content })
+function fetchMessages() {
+    if (!otherUserId) return;
+    
+    fetch(`/chats/${otherUserId}/get/${lastMessageId}/`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
         })
-        .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                appendMessage(data.message, true);
-            }
-        })
-        .catch(err => console.error('Error sending message:', err));
-    });
-
-    // Enter key support
-    input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            form.dispatchEvent(new Event('submit'));
-        }
-    });
-
-    // AJAX Polling every 3 seconds
-    setInterval(function() {
-        fetch(`/chats/${otherUserId}/get/${lastMessageId}/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success' && data.messages.length > 0) {
                 data.messages.forEach(msg => {
-                    if (msg.id > lastMessageId) {
-                        const isSent = (msg.sender_id === currentUserId);
-                        appendMessage(msg, isSent);
-                    }
+                    const isSent = (msg.sender_id === currentUserId);
+                    appendMessage(msg, isSent);
                 });
             }
         })
         .catch(err => console.error('Error fetching messages:', err));
-    }, 3000);
+}
+
+// Start AJAX polling for chat messages every 3 seconds
+setInterval(fetchMessages, 3000);
+
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const content = input.value.trim();
+    if (content === '') return;
+
+    input.value = ''; // clear immediately
+    
+    // Get CSRF token from cookies
+    const getCookie = (name) => {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    };
+
+    fetch(`/chats/${otherUserId}/send/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ message: content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const isSent = (data.message.sender_id === currentUserId);
+            appendMessage(data.message, isSent);
+        }
+    })
+    .catch(err => console.error('Error sending message:', err));
+});
+
+input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        form.dispatchEvent(new Event('submit'));
+    }
+});

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/notifications.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="notifications-page">
+    <header class="notifications-header">
+        <div>
+            <p class="eyebrow">Updates</p>
+            <h1>Notifications</h1>
+            <p>Review important activity from requests, schedules, and completed sessions.</p>
+        </div>
+        <div class="header-actions">
+            <a href="/dashboard/" class="secondary-link">Dashboard</a>
+            {% if unread_notifications_count %}
+            <form action="{% url 'mark_all_notifications_read' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'notifications' %}">
+                <button type="submit" class="primary-action">Mark All Read</button>
+            </form>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="notifications-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Recent Activity</h2>
+                <p>Newest notifications appear first{% if unread_notifications_count %}. {{ unread_notifications_count }} unread{% endif %}.</p>
+            </div>
+        </div>
+
+        <div class="notification-list">
+            {% for notification in notifications %}
+            <article class="notification-card {% if not notification.is_read %}unread{% endif %}">
+                <div class="notification-marker">
+                    {% if notification.is_read %}Read{% else %}New{% endif %}
+                </div>
+                <div class="notification-content">
+                    <h3>{{ notification.message }}</h3>
+                    <p>{{ notification.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                {% if not notification.is_read %}
+                <form action="{% url 'mark_notification_read' notification.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'notifications' %}">
+                    <button type="submit" class="text-button">Mark Read</button>
+                </form>
+                {% endif %}
+            </article>
+            {% empty %}
+            <div class="empty-state">
+                <h3>No notifications yet</h3>
+                <p>When something important happens, it will appear here.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+{% endblock %}

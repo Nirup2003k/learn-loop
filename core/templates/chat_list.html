@@ -6,38 +6,58 @@
 
 {% block content %}
 
-<div class="page-container">
-    <div class="page-header">
-        <h2>Your Conversations</h2>
-        <p>Chat with your accepted swap matches to schedule learning sessions.</p>
-    </div>
+<div class="chat-list-page">
+    <header class="chat-list-header">
+        <div>
+            <p class="eyebrow">Conversations</p>
+            <h1>Your Chats</h1>
+            <p>Message accepted skill-swap partners and coordinate your learning sessions.</p>
+        </div>
+        <a href="/requests/" class="secondary-link">View Connections</a>
+    </header>
 
-    <div class="chat-list-container">
-        <div class="chat-list-content">
-            {% for chat_user in users %}
-                <a href="{% url 'chat' chat_user.id %}" class="chat-item">
-                    <div class="chat-avatar">
-                        {{ chat_user.username|make_list|first|upper }}
-                    </div>
+    <section class="chat-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Accepted Partners</h2>
+                <p>{{ chat_partners|length }} available conversation{{ chat_partners|length|pluralize }}</p>
+            </div>
+        </div>
+
+        <div class="conversation-list">
+            {% for chat in chat_partners %}
+                <a href="{% url 'chat' chat.user.id %}" class="conversation-item">
+                    <div class="chat-avatar">{{ chat.user.username|make_list|first|upper }}</div>
                     <div class="chat-info">
-                        <div class="chat-name">{{ chat_user.username }}</div>
-                        <div class="chat-preview">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                            Tap to view messages...
+                        <div class="chat-row">
+                            <h3>{{ chat.user.username }}</h3>
+                            {% if chat.unread_count %}
+                                <strong class="chat-unread-count">{{ chat.unread_count }}</strong>
+                            {% endif %}
+                            {% if chat.last_message %}
+                                <span>{{ chat.last_message.timestamp|date:"M d, H:i" }}</span>
+                            {% endif %}
                         </div>
+                        {% if chat.last_message %}
+                            <p>
+                                {% if chat.last_message.sender == request.user %}You: {% endif %}
+                                {{ chat.last_message.content|truncatechars:80 }}
+                            </p>
+                        {% else %}
+                            <p>No messages yet. Start the conversation.</p>
+                        {% endif %}
                     </div>
-                    <div class="chat-arrow">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
+                    <div class="chat-action">Open</div>
                 </a>
             {% empty %}
                 <div class="empty-state">
-                    <div class="empty-state-icon">💬</div>
-                    <p>No conversations yet. Send a request to start chatting!</p>
+                    <h3>No conversations yet</h3>
+                    <p>Accept a swap request first, then your chat partner will appear here.</p>
+                    <a href="/requests/" class="secondary-link">Go to Requests</a>
                 </div>
             {% endfor %}
         </div>
-    </div>
+    </section>
 </div>
 
 {% endblock %}

@@ -6,33 +6,47 @@
 
 {% block content %}
 
-<div class="schedule-container">
-    <div class="schedule-header">
-        <h2>🗓️ Schedule Session</h2>
-        <p>Set up a meeting with <strong>{{ receiver.username }}</strong></p>
-    </div>
+<div class="schedule-create-page">
+    <section class="schedule-card">
+        <header class="schedule-header">
+            <p class="eyebrow">New Session</p>
+            <h1>Schedule Session</h1>
+            <p>Set up a learning session with <strong>{{ receiver.username }}</strong>.</p>
+        </header>
 
-    <form method="POST">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="date">Date</label>
-            <input type="date" id="date" name="date" class="form-control" required>
-        </div>
+        <form method="POST" class="schedule-form">
+            {% csrf_token %}
 
-        <div class="form-group">
-            <label for="time">Time</label>
-            <input type="time" id="time" name="time" class="form-control" required>
-        </div>
+            <div class="form-group">
+                <label for="skill">Skill</label>
+                <input type="text" id="skill" name="skill" class="form-control" placeholder="Python, UI Design, Public Speaking" required>
+            </div>
 
-        <div class="form-group">
-            <label for="meeting_link">Meeting Link (Optional)</label>
-            <input type="url" id="meeting_link" name="meeting_link" class="form-control" placeholder="e.g. https://meet.google.com/...">
-        </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" class="form-control" required>
+                </div>
 
-        <button type="submit" class="btn-submit">Send Schedule Request</button>
-    </form>
+                <div class="form-group">
+                    <label for="time">Time</label>
+                    <input type="time" id="time" name="time" class="form-control" required>
+                </div>
+            </div>
+            <p class="field-note" style="margin-top: -16px; margin-bottom: 24px;">Times are in your local timezone ({{ request.user.profile.timezone }}).</p>
 
-    <a href="{% url 'requests' %}" class="back-link">← Back to Requests</a>
+            <div class="form-group">
+                <label for="meeting_link">Meeting Link</label>
+                <input type="url" id="meeting_link" name="meeting_link" class="form-control" placeholder="https://meet.google.com/...">
+                <p class="field-note">Optional. You can also coordinate the link through chat later.</p>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'requests' %}" class="secondary-link">Back to Requests</a>
+                <button type="submit" class="btn-submit">Send Schedule Request</button>
+            </div>
+        </form>
+    </section>
 </div>
 
 {% endblock %}

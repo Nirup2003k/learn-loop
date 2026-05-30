@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Video Session - LearnLoop{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'core/css/video_room.css' %}">
+
+<div class="container">
+    <div class="video-room-container">
+        <div class="video-header">
+            <h2><div class="recording-dot"></div> Live Session: {{ room_name }}</h2>
+            <a href="{% url 'dashboard' %}" class="btn-primary" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);">Back to Dashboard</a>
+        </div>
+
+        <div class="video-grid">
+            <!-- Waiting State -->
+            <div class="waiting-message" id="waitingMessage">
+                <h3>Waiting for partner...</h3>
+                <p>Ensure your camera and microphone permissions are granted.</p>
+            </div>
+
+            <!-- Remote Video (Partner) -->
+            <video id="remote-video" autoplay playsinline></video>
+            
+            <!-- Local Video (You) -->
+            <video id="local-video" autoplay playsinline muted></video>
+
+            <!-- Floating Controls -->
+            <div class="video-controls">
+                <button class="control-btn" id="btn-toggle-mic" title="Toggle Microphone">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                </button>
+                <button class="control-btn" id="btn-toggle-cam" title="Toggle Camera">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                </button>
+                <button class="control-btn btn-end-call" id="btn-end-call" title="End Call">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="23" y1="1" x2="1" y2="23"></line></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ room_name|json_script:"room-name" }}
+<script src="{% static 'core/js/webrtc.js' %}"></script>
+{% endblock %}

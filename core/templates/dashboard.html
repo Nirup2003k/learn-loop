@@ -1,132 +1,331 @@
 {% extends 'base.html' %}
-{% block content %}
-
 {% load static %}
+{% load core_extras %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'core/css/dashboard.css' %}">
 {% endblock %}
 
-<div class="dashboard-container">
-    
-    <div class="dashboard-header">
-        <h1>Your Dashboard</h1>
-        <p>Manage your matches, requests, and connections all in one place.</p>
-    </div>
+{% block content %}
 
-    <!-- 1. Top Stats Bar -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-info">
-                <span class="stat-label">Total Matches</span>
-                <span class="stat-value">{{ total_matches|default:"0" }}</span>
-            </div>
-            <div class="stat-icon">🎯</div>
+<div class="dashboard-page">
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">Workspace</p>
+            <h1>Your Dashboard</h1>
+            <p>Track requests, sessions, notifications, and recommended skill-swap matches.</p>
         </div>
-        <div class="stat-card">
-            <div class="stat-info">
-                <span class="stat-label">Pending Requests</span>
-                <span class="stat-value">{{ received|length|default:"0" }}</span>
-            </div>
-            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">⏳</div>
+        <div class="header-actions">
+            <a href="/search/" class="secondary-link">Find Members</a>
+            <a href="/profile/" class="primary-link">Update Profile</a>
         </div>
-        <div class="stat-card">
-            <div class="stat-info">
-                <span class="stat-label">Messages</span>
-                <span class="stat-value">{{ total_messages|default:"0" }}</span>
-            </div>
-            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">💬</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-info">
-                <span class="stat-label">Upcoming Sessions</span>
-                <span class="stat-value">{{ total_sessions|default:"0" }}</span>
-            </div>
-            <div class="stat-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">🗓️</div>
-        </div>
-    </div>
+    </header>
 
-    <!-- 2. Urgent Actions: Pending Requests -->
-    <div class="section-wrapper">
-        <h3 class="section-title">Pending Requests</h3>
-        <div class="requests-list">
-            {% for r in received %}
-            <div class="request-card">
-                <div class="req-info">
-                    <div class="req-avatar">{{ r.sender.username|make_list|first|upper }}</div>
-                    <div class="req-text">
-                        <h4>{{ r.sender.username }}</h4>
-                        <p>Offers: <strong>{{ r.skill_offered }}</strong> &bull; Wants: <strong>{{ r.skill_wanted }}</strong></p>
+    <section class="stats-grid">
+        <article class="stat-card">
+            <span>Total Matches</span>
+            <strong>{{ total_matches|default:"0" }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Pending Requests</span>
+            <strong>{{ received|length|default:"0" }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Messages</span>
+            <strong>{{ total_messages|default:"0" }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Upcoming Sessions</span>
+            <strong>{{ upcoming_sessions|length|default:"0" }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Completed Sessions</span>
+            <strong>{{ total_sessions|default:"0" }}</strong>
+        </article>
+    </section>
+
+    <div class="dashboard-grid">
+        <main class="main-column">
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Pending Requests</h2>
+                        <p>Review incoming swap requests that need your response.</p>
                     </div>
+                    <a href="/requests/" class="text-link">View all</a>
                 </div>
-                <div class="req-actions">
-                    <form action="/accept-request/{{ r.id }}/" method="POST" style="margin:0;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-action btn-accept">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Accept
-                        </button>
-                    </form>
-                    <form action="/reject-request/{{ r.id }}/" method="POST" style="margin:0;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-action btn-reject">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            Reject
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% empty %}
-            <div class="empty-state">
-                <div class="empty-state-icon">📥</div>
-                <p>No pending requests. You're all caught up!</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- 3. Secondary: Top Matches -->
-    <div class="section-wrapper">
-        <h3 class="section-title">Top Matches</h3>
-        <div class="matches-grid">
-            {% for m, score in matches %}
-            <div class="match-card">
-                <div class="match-header">
-                    <div class="match-user">
-                        <div class="match-avatar">{{ m.user.username|make_list|first|upper }}</div>
-                        <div class="match-info">
-                            <h4>{{ m.user.username }}</h4>
-                            <div class="score-badge">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                                Score: {{ score }}
+                <div class="item-list">
+                    {% for r in received %}
+                    <article class="list-item">
+                        <div class="member-line">
+                            <div class="avatar">{{ r.sender.username|make_list|first|upper }}</div>
+                            <div>
+                                <h3>{{ r.sender.username }}</h3>
+                                <p>Offers <strong>{{ r.skill_offered|default:"Not specified" }}</strong> and wants <strong>{{ r.skill_wanted|default:"Not specified" }}</strong></p>
                             </div>
                         </div>
+                        <div class="row-actions">
+                            <form action="{% url 'accept_request' r.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary-small">Accept</button>
+                            </form>
+                            <form action="{% url 'reject_request' r.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary-small">Reject</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% empty %}
+                    <div class="empty-state">
+                        <svg class="empty-icon" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <h3>No pending requests</h3>
+                        <p>You are caught up. New incoming requests will appear here.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Upcoming Sessions</h2>
+                        <p>Accepted sessions that are scheduled for now or later.</p>
+                    </div>
+                    <a href="/schedules/" class="text-link">View schedules</a>
+                </div>
+
+                <div class="item-list">
+                    {% for session in upcoming_sessions %}
+                    <article class="session-item">
+                        <div class="session-main">
+                            <div class="avatar">
+                                {% if request.user == session.teacher %}
+                                    {{ session.learner.username|make_list|first|upper }}
+                                {% else %}
+                                    {{ session.teacher.username|make_list|first|upper }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h3>
+                                    {% if request.user == session.teacher %}
+                                        Teaching {{ session.learner.username }}
+                                    {% else %}
+                                        Learning from {{ session.teacher.username }}
+                                    {% endif %}
+                                </h3>
+                                <p>{{ session.skill|default:"Not specified" }}</p>
+                                <span>{{ session.start_time|date:'M j, Y' }} at {{ session.start_time|time:'g:i A' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="session-status">
+                            {% if request.user == session.teacher and session.teacher_completed %}
+                                <span class="status-note">Waiting for partner</span>
+                            {% elif request.user == session.learner and session.learner_completed %}
+                                <span class="status-note">Waiting for partner</span>
+                            {% else %}
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="{% url 'video_room' session.id %}" class="btn btn-primary-small" style="background: #22c55e; border-color: #22c55e;">Join Video</a>
+                                    <form action="{% url 'mark_session_complete' session.id %}" method="POST">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary-small">Mark Completed</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% empty %}
+                    <div class="empty-state">
+                        <svg class="empty-icon" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <h3>No upcoming sessions</h3>
+                        <p>Accepted scheduled sessions will appear here.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            {% if completed_sessions %}
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Completed Sessions</h2>
+                        <p>Recent completed sessions and feedback actions.</p>
                     </div>
                 </div>
-                
-                <div class="match-skills">
-                    <div>Teaches: <strong>{{ m.teach_skills|truncatechars:25 }}</strong></div>
-                    <div style="margin-top: 4px;">Wants: <strong>{{ m.learn_skills|truncatechars:25 }}</strong></div>
+
+                <div class="item-list">
+                    {% for session in completed_sessions %}
+                    <article class="session-item completed">
+                        <div class="session-main">
+                            <div class="avatar">
+                                {% if request.user == session.teacher %}
+                                    {{ session.learner.username|make_list|first|upper }}
+                                {% else %}
+                                    {{ session.teacher.username|make_list|first|upper }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h3>
+                                    {% if request.user == session.teacher %}
+                                        Taught {{ session.learner.username }}
+                                    {% else %}
+                                        Learned from {{ session.teacher.username }}
+                                    {% endif %}
+                                </h3>
+                                <p>{{ session.skill|default:"Not specified" }}</p>
+                            </div>
+                        </div>
+
+                        <div class="rating-area">
+                            {% has_rated session request.user as rated %}
+                            {% if request.user == session.learner %}
+                                {% if rated %}
+                                    <span class="status-note success">Rated</span>
+                                {% else %}
+                                    <form action="{% url 'rate_session' session.id %}" method="POST" class="rating-form">
+                                        {% csrf_token %}
+                                        <select name="rating" required>
+                                            <option value="" disabled selected>Rate</option>
+                                            <option value="5">5 - Excellent</option>
+                                            <option value="4">4 - Very Good</option>
+                                            <option value="3">3 - Good</option>
+                                            <option value="2">2 - Fair</option>
+                                            <option value="1">1 - Poor</option>
+                                        </select>
+                                        <input type="text" name="review" placeholder="Optional feedback">
+                                        <button type="submit" class="btn btn-primary-small">Submit</button>
+                                    </form>
+                                {% endif %}
+                            {% else %}
+                                {% if rated %}
+                                    <span class="status-note success">Learner rated</span>
+                                {% else %}
+                                    <span class="status-note">Awaiting feedback</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </main>
+
+        <aside class="side-column">
+            <section class="panel">
+                <div class="panel-heading compact">
+                    <div>
+                        <h2>Notifications</h2>
+                        <p>{{ unread_notifications_count|default:"0" }} unread</p>
+                    </div>
+                    <a href="{% url 'notifications' %}" class="text-link">View all</a>
                 </div>
 
-                {% if m.user.id in sent_ids %}
-                    <button class="btn-outline" disabled style="cursor: not-allowed; opacity: 0.6;">Request Sent</button>
-                {% else %}
-                    <form action="/send-request/{{ m.user.id }}/" method="POST" style="margin:0;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-outline">Send Swap Request</button>
-                    </form>
-                {% endif %}
-            </div>
-            {% empty %}
-            <div class="empty-state" style="grid-column: 1 / -1;">
-                <div class="empty-state-icon">🔍</div>
-                <p>No perfect matches found right now. Try updating your skills!</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+                <div class="notification-list">
+                    {% for notification in latest_notifications %}
+                    <article class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                        <div>
+                            <h3>{% if notification.is_read %}Read{% else %}New{% endif %}</h3>
+                            <p>{{ notification.message }}</p>
+                            <span>{{ notification.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        {% if not notification.is_read %}
+                        <form action="{% url 'mark_notification_read' notification.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'dashboard' %}">
+                            <button type="submit" class="text-button">Mark read</button>
+                        </form>
+                        {% endif %}
+                    </article>
+                    {% empty %}
+                    <div class="empty-state compact">
+                        <svg class="empty-icon" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <h3>No notifications</h3>
+                        <p>Important updates will appear here.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
 
+            <section class="panel">
+                <div class="panel-heading compact">
+                    <div>
+                        <h2>Top Matches</h2>
+                        <p>Best current recommendations.</p>
+                    </div>
+                </div>
+
+                <div class="match-list">
+                    {% for m, score in matches %}
+                    <article class="match-card">
+                        <div class="member-line">
+                            <div class="avatar">{{ m.user.username|make_list|first|upper }}</div>
+                            <div>
+                                <h3>{{ m.user.username }}</h3>
+                                <p>Score {{ score }}</p>
+                            </div>
+                        </div>
+                        <div class="skill-summary">
+                            <p><strong>Teaches:</strong> {{ m.teach_skills|truncatechars:35 }}</p>
+                            <p><strong>Wants:</strong> {{ m.learn_skills|truncatechars:35 }}</p>
+                        </div>
+                        {% if m.user.id in swap_related_user_ids %}
+                            <button class="btn btn-disabled" disabled>Already Connected</button>
+                        {% else %}
+                            <form action="/send-request/{{ m.user.id }}/" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline">Send Request</button>
+                            </form>
+                        {% endif %}
+                    </article>
+                    {% empty %}
+                    <div class="empty-state compact">
+                        <svg class="empty-icon" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <h3>No matches yet</h3>
+                        <p>Update your profile skills to improve matching.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            {% if top_users %}
+            <section class="panel">
+                <div class="panel-heading compact">
+                    <div>
+                        <h2>Top Rated Users</h2>
+                        <p>Members with strong feedback.</p>
+                    </div>
+                </div>
+
+                <div class="match-list">
+                    {% for u in top_users %}
+                    <article class="match-card compact-card">
+                        <div class="member-line">
+                            <div class="avatar">{{ u.user.username|make_list|first|upper }}</div>
+                            <div>
+                                <h3>{{ u.user.username }}</h3>
+                                <p>{{ u.average_rating }} rating, {{ u.sessions_completed }} sessions</p>
+                            </div>
+                        </div>
+                        <div class="skill-summary">
+                            <p><strong>Teaches:</strong> {{ u.teach_skills|truncatechars:35 }}</p>
+                        </div>
+                        {% if u.user.id in swap_related_user_ids %}
+                            <button class="btn btn-disabled" disabled>Already Connected</button>
+                        {% else %}
+                            <form action="/send-request/{{ u.user.id }}/" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline">Send Request</button>
+                            </form>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </aside>
+    </div>
 </div>
 
 {% endblock %}
